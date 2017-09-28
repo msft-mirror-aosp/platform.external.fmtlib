@@ -4,6 +4,8 @@ cc_library {
     cflags: [
         "-std=c++11",
         "-fno-exceptions",
+        "-Wall",
+        "-Werror",
     ],
     sanitize: {
         misc_undefined: ["integer"],
