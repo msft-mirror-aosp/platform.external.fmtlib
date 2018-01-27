@@ -2,7 +2,6 @@ cc_library {
     name: "fmtlib",
     srcs: ["fmt/format.cc"],
     cflags: [
-        "-std=c++11",
         "-fno-exceptions",
         "-Wall",
         "-Werror",
