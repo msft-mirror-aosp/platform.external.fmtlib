@@ -5,6 +5,8 @@ cc_library {
         "-fno-exceptions",
         "-Wall",
         "-Werror",
+        // If built without exceptions, libfmt uses assert.
+        "-UNDEBUG",
     ],
     sanitize: {
         misc_undefined: ["integer"],
