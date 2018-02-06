@@ -11,8 +11,8 @@ namespace is usually omitted in examples.
 Format API
 ==========
 
-The following functions use :ref:`format string syntax <syntax>` similar
-to the one used by Python's `str.format
+The following functions defined in ``fmt/format.h`` use :ref:`format string
+syntax <syntax>` similar to the one used by Python's `str.format
 <http://docs.python.org/3/library/stdtypes.html#str.format>`_ function.
 They take *format_str* and *args* as arguments.
 
@@ -84,6 +84,36 @@ Note in the example above the ``format_arg`` function ignores the contents of
 ``format_arg`` in :file:`fmt/time.h` for an advanced example of how to use
 the ``format_str`` argument to customize the formatted output.
 
+This technique can also be used for formatting class hierarchies::
+
+  namespace local {
+  struct Parent {
+    Parent(int p) : p(p) {}
+    virtual void write(fmt::Writer &w) const {
+      w.write("Parent : p={}", p);
+    }
+    int p;
+  };
+
+  struct Child : Parent {
+    Child(int c, int p) : Parent(p), c(c) {}
+    virtual void write(fmt::Writer &w) const {
+      w.write("Child c={} : ", c);
+      Parent::write(w);
+    }
+    int c;
+  };
+
+  void format_arg(fmt::BasicFormatter<char> &f,
+                  const char *&format_str, const Parent &p) {
+    p.write(f.writer());
+  }
+  }
+  Local::Child c(1,2);
+  Local::Parent &p = c;
+  fmt::print("via ref to base: {}\n", p);
+  fmt::print("direct to child: {}\n", c);
+
 This section shows how to define a custom format function for a user-defined
 type. The next section describes how to get ``fmt`` to use a conventional stream
 output ``operator<<`` when one is defined for a user-defined type.
@@ -120,7 +150,7 @@ custom argument formatter class::
   // A custom argument formatter that formats negative integers as unsigned
   // with the ``x`` format specifier.
   class CustomArgFormatter :
-    public fmt::BasicArgFormatter<CustomArgFormatter, char>  {
+    public fmt::BasicArgFormatter<CustomArgFormatter, char> {
     public:
     CustomArgFormatter(fmt::BasicFormatter<char, CustomArgFormatter> &f,
                        fmt::FormatSpec &s, const char *fmt)
@@ -203,6 +233,9 @@ store output elsewhere by subclassing `~fmt::BasicWriter`.
 .. doxygenclass:: fmt::BasicStringWriter
    :members:
 
+.. doxygenclass:: fmt::BasicContainerWriter
+   :members:
+
 .. doxygenfunction:: bin(int)
 
 .. doxygenfunction:: oct(int)
@@ -228,6 +261,8 @@ Utilities
    :members:
 
 .. doxygenfunction:: fmt::to_string(const T&)
+
+.. doxygenfunction:: fmt::to_wstring(const T&)
 
 .. doxygenclass:: fmt::BasicStringRef
    :members:
