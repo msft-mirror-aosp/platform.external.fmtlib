@@ -11,6 +11,12 @@ target_compile_options(gmock PUBLIC ${CPP11_FLAG})
 target_compile_definitions(gmock PUBLIC GTEST_HAS_STD_WSTRING=1)
 target_include_directories(gmock PUBLIC .)
 
+# Workaround for Cygwin to make google-tests compile and run because the macro
+# _POSIX_C_SOURCE must be defined to allow fileno(), strdup(), fdopen() calls.
+if (CYGWIN)
+  target_compile_definitions(gmock PUBLIC _POSIX_C_SOURCE=200809)
+endif ()
+
 find_package(Threads)
 if (Threads_FOUND)
   target_link_libraries(gmock ${CMAKE_THREAD_LIBS_INIT})
@@ -80,6 +86,7 @@ function(add_fmt_test name)
 endfunction()
 
 add_fmt_test(assert-test)
+add_fmt_test(container-test)
 add_fmt_test(gtest-extra-test)
 add_fmt_test(format-test)
 add_fmt_test(format-impl-test)
@@ -139,7 +146,7 @@ if (FMT_PEDANTIC)
     "${CMAKE_CURRENT_BINARY_DIR}/compile-test"
     --build-generator ${CMAKE_GENERATOR}
     --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-    --build-options 
+    --build-options
     "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
     "-DCPP11_FLAG=${CPP11_FLAG}"
     "-DSUPPORTS_USER_DEFINED_LITERALS=${SUPPORTS_USER_DEFINED_LITERALS}")
