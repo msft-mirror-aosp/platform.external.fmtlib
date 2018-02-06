@@ -151,16 +151,46 @@ TEST(StringRefTest, Ctor) {
 
   EXPECT_STREQ("defg", StringRef(std::string("defg")).data());
   EXPECT_EQ(4u, StringRef(std::string("defg")).size());
+
+#if FMT_HAS_STRING_VIEW
+  EXPECT_STREQ("hijk", StringRef(std::string_view("hijk")).data());
+  EXPECT_EQ(4u, StringRef(std::string_view("hijk")).size());
+#endif
+
+#if FMT_HAS_EXPERIMENTAL_STRING_VIEW
+  EXPECT_STREQ("hijk", StringRef(std::experimental::string_view("hijk")).data());
+  EXPECT_EQ(4u, StringRef(std::experimental::string_view("hijk")).size());
+#endif
 }
 
 TEST(StringRefTest, ConvertToString) {
   std::string s = StringRef("abc").to_string();
   EXPECT_EQ("abc", s);
+
+#if FMT_HAS_STRING_VIEW
+  StringRef str_ref("defg");
+  std::string_view sv = static_cast<std::string_view>(str_ref);
+  EXPECT_EQ("defg", sv);
+#endif
+
+#if FMT_HAS_EXPERIMENTAL_STRING_VIEW
+  StringRef str_ref("defg");
+  std::experimental::string_view sv = static_cast<std::experimental::string_view>(str_ref);
+  EXPECT_EQ("defg", sv);
+#endif
 }
 
 TEST(CStringRefTest, Ctor) {
   EXPECT_STREQ("abc", CStringRef("abc").c_str());
   EXPECT_STREQ("defg", CStringRef(std::string("defg")).c_str());
+
+#if FMT_HAS_STRING_VIEW
+  EXPECT_STREQ("hijk", CStringRef(std::string_view("hijk")).c_str());
+#endif
+
+#if FMT_HAS_EXPERIMENTAL_STRING_VIEW
+  EXPECT_STREQ("hijk", CStringRef(std::experimental::string_view("hijk")).c_str());
+#endif
 }
 
 #if FMT_USE_TYPE_TRAITS
@@ -1234,6 +1264,16 @@ TEST(FormatterTest, FormatIntLocale) {
   EXPECT_EQ("1--234--567", format("{:n}", 1234567));
 }
 
+struct ConvertibleToLongLong {
+  operator fmt::LongLong() const {
+    return fmt::LongLong(1) << 32;
+  }
+};
+
+TEST(FormatterTest, FormatConvertibleToLongLong) {
+  EXPECT_EQ("100000000", format("{:x}", ConvertibleToLongLong()));
+}
+
 TEST(FormatterTest, FormatFloat) {
   EXPECT_EQ("392.500000", format("{0:f}", 392.5f));
 }
@@ -1367,6 +1407,18 @@ TEST(FormatterTest, FormatStringRef) {
 TEST(FormatterTest, FormatCStringRef) {
   EXPECT_EQ("test", format("{0}", CStringRef("test")));
 }
+
+#if FMT_HAS_STRING_VIEW
+TEST(FormatterTest, FormatStringView) {
+  EXPECT_EQ("test", format("{0}", std::string_view("test")));
+}
+#endif
+
+#if FMT_HAS_EXPERIMENTAL_STRING_VIEW
+TEST(FormatterTest, FormatExperimentalStringView) {
+	EXPECT_EQ("test", format("{0}", std::experimental::string_view("test")));
+}
+#endif
 
 void format_arg(fmt::BasicFormatter<char> &f, const char *, const Date &d) {
   f.writer() << d.year() << '-' << d.month() << '-' << d.day();
@@ -1552,6 +1604,29 @@ TEST(FormatTest, Variadic) {
   EXPECT_EQ(L"abc1", format(L"{}c{}", L"ab", 1));
 }
 
+TEST(FormatTest, JoinArg) {
+  using fmt::join;
+  int v1[3] = { 1, 2, 3 };
+  std::vector<float> v2;
+  v2.push_back(1.2f);
+  v2.push_back(3.4f);
+
+  EXPECT_EQ("(1, 2, 3)", format("({})", join(v1, v1 + 3, ", ")));
+  EXPECT_EQ("(1)", format("({})", join(v1, v1 + 1, ", ")));
+  EXPECT_EQ("()", format("({})", join(v1, v1, ", ")));
+  EXPECT_EQ("(001, 002, 003)", format("({:03})", join(v1, v1 + 3, ", ")));
+  EXPECT_EQ("(+01.20, +03.40)",
+            format("({:+06.2f})", join(v2.begin(), v2.end(), ", ")));
+
+  EXPECT_EQ(L"(1, 2, 3)", format(L"({})", join(v1, v1 + 3, L", ")));
+  EXPECT_EQ("1, 2, 3", format("{0:{1}}", join(v1, v1 + 3, ", "), 1)); 
+
+#if FMT_HAS_GXX_CXX11
+  EXPECT_EQ("(1, 2, 3)", format("({})", join(v1, ", ")));
+  EXPECT_EQ("(+01.20, +03.40)", format("({:+06.2f})", join(v2, ", ")));
+#endif
+}
+
 template <typename T>
 std::string str(const T &value) {
   return fmt::format("{}", value);
@@ -1576,6 +1651,24 @@ FMT_VARIADIC(std::string, format_message, int, const char *)
 TEST(FormatTest, FormatMessageExample) {
   EXPECT_EQ("[42] something happened",
       format_message(42, "{} happened", "something"));
+}
+
+class test_class
+{
+public:
+  std::string format_message(int id, const char *format,const fmt::ArgList &args) const {
+    MemoryWriter w;
+    w.write("[{}] ", id);
+    w.write(format, args);
+    return w.str();
+  }
+  FMT_VARIADIC_CONST(std::string, format_message, int, const char *)
+};
+
+TEST(FormatTest, ConstFormatMessage) {
+  test_class c;
+  EXPECT_EQ("[42] something happened",
+    c.format_message(42, "{} happened", "something"));
 }
 
 #if FMT_USE_VARIADIC_TEMPLATES
@@ -1629,6 +1722,14 @@ TEST(FormatTest, Enum) {
   EXPECT_EQ("0", fmt::format("{}", A));
 }
 
+#if __cplusplus >= 201103L
+enum TestFixedEnum : short { B };
+
+TEST(FormatTest, FixedEnum) {
+  EXPECT_EQ("0", fmt::format("{}", B));
+}
+#endif
+
 class MockArgFormatter :
     public fmt::internal::ArgFormatterBase<MockArgFormatter, char> {
  public:
@@ -1661,3 +1762,6 @@ TEST(FormatTest, ConvertCollision) {
   fmt::format("{}", 42);
 }
 
+TEST(FormatTest, Regression) {
+  fmt::format("...........{:<77777.7p}", "foo");
+}
