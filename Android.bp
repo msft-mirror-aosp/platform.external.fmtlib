@@ -1,6 +1,6 @@
 cc_library {
     name: "fmtlib",
-    srcs: ["fmt/format.cc"],
+    srcs: ["src/format.cc"],
     cflags: [
         "-fno-exceptions",
         "-Wall",
@@ -11,6 +11,6 @@ cc_library {
     sanitize: {
         misc_undefined: ["integer"],
     },
-    local_include_dirs: ["."],
-    export_include_dirs: ["."],
+    local_include_dirs: ["include"],
+    export_include_dirs: ["include"],
 }
