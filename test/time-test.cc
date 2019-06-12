@@ -1,16 +1,16 @@
-/*
- Time formatting tests
+// Formatting library for C++ - time formatting tests
+//
+// Copyright (c) 2012 - present, Victor Zverovich
+// All rights reserved.
+//
+// For the license information refer to format.h.
 
- Copyright (c) 2012 - 2016, Victor Zverovich
- All rights reserved.
-
- For the license information refer to format.h.
- */
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "gmock/gmock.h"
+#include "gmock.h"
+#include "fmt/locale.h"
 #include "fmt/time.h"
 
 TEST(TimeTest, Format) {
@@ -27,15 +27,23 @@ TEST(TimeTest, GrowBuffer) {
   for (int i = 0; i < 30; ++i)
     s += "%c";
   s += "}\n";
-  std::time_t t = std::time(0);
+  std::time_t t = std::time(FMT_NULL);
   fmt::format(s, *std::localtime(&t));
+}
+
+TEST(TimeTest, FormatToEmptyContainer) {
+  std::string s;
+  auto time = std::tm();
+  time.tm_sec = 42;
+  fmt::format_to(std::back_inserter(s), "{:%S}", time);
+  EXPECT_EQ(s, "42");
 }
 
 TEST(TimeTest, EmptyResult) {
   EXPECT_EQ("", fmt::format("{}", std::tm()));
 }
 
-bool EqualTime(const std::tm &lhs, const std::tm &rhs) {
+static bool EqualTime(const std::tm &lhs, const std::tm &rhs) {
   return lhs.tm_sec == rhs.tm_sec &&
          lhs.tm_min == rhs.tm_min &&
          lhs.tm_hour == rhs.tm_hour &&
@@ -48,13 +56,13 @@ bool EqualTime(const std::tm &lhs, const std::tm &rhs) {
 }
 
 TEST(TimeTest, LocalTime) {
-  std::time_t t = std::time(0);
+  std::time_t t = std::time(FMT_NULL);
   std::tm tm = *std::localtime(&t);
   EXPECT_TRUE(EqualTime(tm, fmt::localtime(t)));
 }
 
 TEST(TimeTest, GMTime) {
-  std::time_t t = std::time(0);
+  std::time_t t = std::time(FMT_NULL);
   std::tm tm = *std::gmtime(&t);
   EXPECT_TRUE(EqualTime(tm, fmt::gmtime(t)));
 }
