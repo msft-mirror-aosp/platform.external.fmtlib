@@ -1,5 +1,5 @@
-cc_library {
-    name: "fmtlib",
+cc_defaults {
+    name: "fmtlib-defaults",
     srcs: ["src/format.cc"],
     cflags: [
         "-fno-exceptions",
@@ -13,4 +13,28 @@ cc_library {
     },
     local_include_dirs: ["include"],
     export_include_dirs: ["include"],
+}
+
+cc_library {
+    name: "fmtlib",
+    defaults: ["fmtlib-defaults"],
+    vendor_available: true,
+    recovery_available: true,
+    host_supported: true,
+    native_bridge_supported: true,
+    target: {
+        linux_bionic: {
+            enabled: true,
+        },
+        windows: {
+            enabled: true,
+        },
+    },
+}
+
+cc_library_static {
+    name: "fmtlib_ndk",
+    defaults: ["fmtlib-defaults"],
+    sdk_version: "current",
+    stl: "c++_static",
 }
