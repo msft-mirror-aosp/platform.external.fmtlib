@@ -1,8 +1,5 @@
 name: "fmtlib"
-description:
-    "{fmt} is an open-source formatting library for C++. It can be used as a "
-    "safe and fast alternative to (s)printf and iostreams."
-
+description: "{fmt} is an open-source formatting library for C++. It can be used as a safe and fast alternative to (s)printf and iostreams."
 third_party {
   url {
     type: HOMEPAGE
@@ -12,6 +9,10 @@ third_party {
     type: GIT
     value: "https://github.com/fmtlib/fmt.git"
   }
-  version: "5.3.0"
-  last_upgrade_date { year: 2019 month: 6 day: 11 }
+  version: "6.0.0"
+  last_upgrade_date {
+    year: 2019
+    month: 8
+    day: 26
+  }
 }
