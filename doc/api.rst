@@ -10,7 +10,7 @@ The {fmt} library API consists of the following parts:
   facilities and a lightweight subset of formatting functions
 * :ref:`fmt/format.h <format-api>`: the full format API providing compile-time
   format string checks, output iterator and user-defined type support
-* :ref:`fmt/time.h <time-api>`: date and time formatting
+* :ref:`fmt/chrono.h <chrono-api>`: date and time formatting
 * :ref:`fmt/ostream.h <ostream-api>`: ``std::ostream`` support
 * :ref:`fmt/printf.h <printf-api>`: ``printf`` formatting
 
@@ -39,24 +39,26 @@ participate in an overload resolution if the latter is not a string.
 
 .. _format:
 
-.. doxygenfunction:: format(const S&, const Args&...)
-.. doxygenfunction:: vformat(const S&, basic_format_args<typename buffer_context<Char>::type>)
+.. doxygenfunction:: format(const S&, Args&&...)
+.. doxygenfunction:: vformat(const S&, basic_format_args<buffer_context<Char>>)
 
 .. _print:
 
-.. doxygenfunction:: print(const S&, const Args&...)
+.. doxygenfunction:: print(const S&, Args&&...)
 .. doxygenfunction:: vprint(string_view, format_args)
 
-.. doxygenfunction:: print(std::FILE *, const S&, const Args&...)
+.. doxygenfunction:: print(std::FILE *, const S&, Args&&...)
 .. doxygenfunction:: vprint(std::FILE *, string_view, format_args)
 .. doxygenfunction:: vprint(std::FILE *, wstring_view, wformat_args)
 
-Named arguments
+Named Arguments
 ---------------
 
-.. doxygenfunction:: fmt::arg(string_view, const T&)
+.. doxygenfunction:: fmt::arg(const S&, const T&)
 
-Argument lists
+Named arguments are not supported in compile-time checks at the moment.
+
+Argument Lists
 --------------
 
 .. doxygenfunction:: fmt::make_format_args(const Args&...)
@@ -89,12 +91,13 @@ Format API
 ``fmt/format.h`` defines the full format API providing compile-time format
 string checks, output iterator and user-defined type support.
 
-Compile-time format string checks
+Compile-time Format String Checks
 ---------------------------------
 
+.. doxygendefine:: FMT_STRING
 .. doxygendefine:: fmt
 
-Formatting user-defined types
+Formatting User-defined Types
 -----------------------------
 
 To make a user-defined type formattable, specialize the ``formatter<T>`` struct
@@ -112,7 +115,7 @@ template and implement ``parse`` and ``format`` methods::
 
     template <typename FormatContext>
     auto format(const point &p, FormatContext &ctx) {
-      return format_to(ctx.begin(), "({:.1f}, {:.1f})", p.x, p.y);
+      return format_to(ctx.out(), "({:.1f}, {:.1f})", p.x, p.y);
     }
   };
   }
@@ -126,7 +129,7 @@ Then you can pass objects of type ``point`` to any formatting function::
 In the example above the ``formatter<point>::parse`` function ignores the
 contents of the format string referred to by ``ctx.begin()`` so the object will
 always be formatted in the same way. See ``formatter<tm>::parse`` in
-:file:`fmt/time.h` for an advanced example of how to parse the format string and
+:file:`fmt/chrono.h` for an advanced example of how to parse the format string and
 customize the formatted output.
 
 You can also reuse existing formatters, for example::
@@ -177,15 +180,11 @@ You can also write a formatter for a hierarchy of classes::
     fmt::print("{}", a); // prints "B"
   }
 
-This section shows how to define a custom format function for a user-defined
-type. The next section describes how to get ``fmt`` to use a conventional stream
-output ``operator<<`` when one is defined for a user-defined type.
-
-Output iterator support
+Output Iterator Support
 -----------------------
 
-.. doxygenfunction:: fmt::format_to(OutputIt, const S&, const Args&...)
-.. doxygenfunction:: fmt::format_to_n(OutputIt, std::size_t, string_view, const Args&...)
+.. doxygenfunction:: fmt::format_to(OutputIt, const S&, Args&&...)
+.. doxygenfunction:: fmt::format_to_n(OutputIt, std::size_t, string_view, Args&&...)
 .. doxygenstruct:: fmt::format_to_n_result
    :members:
 
@@ -201,6 +200,8 @@ The following user-defined literals are defined in ``fmt/format.h``.
 Utilities
 ---------
 
+.. doxygenstruct:: fmt::is_char
+
 .. doxygentypedef:: fmt::char_t
 
 .. doxygenfunction:: fmt::formatted_size(string_view, const Args&...)
@@ -209,13 +210,17 @@ Utilities
 
 .. doxygenfunction:: fmt::to_wstring(const T&)
 
-.. doxygenfunction:: fmt::to_string_view(basic_string_view<Char>)
+.. doxygenfunction:: fmt::to_string_view(const Char *)
+
+.. doxygenfunction:: fmt::join(const Range&, string_view)
+
+.. doxygenfunction:: fmt::join(It, It, string_view)
 
 .. doxygenclass:: fmt::basic_memory_buffer
    :protected-members:
    :members:
 
-System errors
+System Errors
 -------------
 
 fmt does not use ``errno`` to communicate errors to the user, but it may call
@@ -232,7 +237,7 @@ the value of ``errno`` being preserved by library functions.
 
 .. _formatstrings:
 
-Custom allocators
+Custom Allocators
 -----------------
 
 The {fmt} library supports custom dynamic memory allocators.
@@ -267,7 +272,7 @@ arguments, the container that stores pointers to them will be allocated using
 the default allocator. Also floating-point formatting falls back on ``sprintf``
 which may do allocations.
 
-Custom formatting of built-in types
+Custom Formatting of Built-in Types
 -----------------------------------
 
 It is possible to change the way arguments are formatted by providing a
@@ -311,16 +316,16 @@ custom argument formatter class::
 .. doxygenclass:: fmt::arg_formatter
    :members:
 
-.. _time-api:
+.. _chrono-api:
 
-Date and time formatting
+Date and Time Formatting
 ========================
 
 The library supports `strftime
 <http://en.cppreference.com/w/cpp/chrono/c/strftime>`_-like date and time
 formatting::
 
-  #include <fmt/time.h>
+  #include <fmt/chrono.h>
 
   std::time_t t = std::time(nullptr);
   // Prints "The date is 2016-04-29." (with the current date)
@@ -331,7 +336,7 @@ The format string syntax is described in the documentation of
 
 .. _ostream-api:
 
-``std::ostream`` support
+``std::ostream`` Support
 ========================
 
 ``fmt/ostream.h`` provides ``std::ostream`` support including formatting of
@@ -352,11 +357,11 @@ user-defined types that have overloaded ``operator<<``::
   std::string s = fmt::format("The date is {}", date(2012, 12, 9));
   // s == "The date is 2012-12-9"
 
-.. doxygenfunction:: print(std::basic_ostream<fmt::char_t<S>>&, const S&, const Args&...)
+.. doxygenfunction:: print(std::basic_ostream<Char>&, const S&, Args&&...)
 
 .. _printf-api:
 
-``printf`` formatting
+``printf`` Formatting
 =====================
 
 The header ``fmt/printf.h`` provides ``printf``-like formatting functionality.
@@ -370,6 +375,6 @@ argument type doesn't match its format specification.
 
 .. doxygenfunction:: fprintf(std::FILE *, const S&, const Args&...)
 
-.. doxygenfunction:: fprintf(std::basic_ostream<fmt::char_t<S>>&, const S&, const Args&...)
+.. doxygenfunction:: fprintf(std::basic_ostream<Char>&, const S&, const Args&...)
 
 .. doxygenfunction:: sprintf(const S&, const Args&...)
