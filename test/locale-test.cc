@@ -8,11 +8,24 @@
 #include "fmt/locale.h"
 #include "gmock.h"
 
-template <typename Char>
-struct numpunct : std::numpunct<Char> {
+#ifndef FMT_STATIC_THOUSANDS_SEPARATOR
+template <typename Char> struct numpunct : std::numpunct<Char> {
  protected:
+  Char do_decimal_point() const FMT_OVERRIDE { return '?'; }
   Char do_thousands_sep() const FMT_OVERRIDE { return '~'; }
 };
+
+TEST(LocaleTest, DoubleDecimalPoint) {
+  std::locale loc(std::locale(), new numpunct<char>());
+  EXPECT_EQ("1?23", fmt::format(loc, "{:n}", 1.23));
+  // Test with Grisu disabled.
+  fmt::memory_buffer buf;
+  fmt::internal::writer w(buf, fmt::internal::locale_ref(loc));
+  auto specs = fmt::format_specs();
+  specs.type = 'n';
+  w.write_double<double, false>(1.23, specs);
+  EXPECT_EQ(fmt::to_string(buf), "1?23");
+}
 
 TEST(LocaleTest, Format) {
   std::locale loc(std::locale(), new numpunct<char>());
@@ -31,4 +44,9 @@ TEST(LocaleTest, WFormat) {
   EXPECT_EQ(L"1~234~567", fmt::format(loc, L"{:n}", 1234567));
   fmt::format_arg_store<fmt::wformat_context, int> as{1234567};
   EXPECT_EQ(L"1~234~567", fmt::vformat(loc, L"{:n}", fmt::wformat_args(as)));
+  auto sep =
+      std::use_facet<std::numpunct<wchar_t>>(std::locale("C")).thousands_sep();
+  auto result = sep == ',' ? L"1,234,567" : L"1234567";
+  EXPECT_EQ(result, fmt::format(std::locale("C"), L"{:n}", 1234567));
 }
+#endif  // FMT_STATIC_THOUSANDS_SEPARATOR
