@@ -9,10 +9,10 @@ third_party {
     type: GIT
     value: "https://github.com/fmtlib/fmt.git"
   }
-  version: "6.0.0"
+  version: "6.1.0"
   last_upgrade_date {
     year: 2019
-    month: 8
-    day: 26
+    month: 12
+    day: 3
   }
 }
