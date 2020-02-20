@@ -36,6 +36,8 @@ cc_library_static {
         "//apex_available:platform",
         "com.android.neuralnetworks",
         "test_com.android.neuralnetworks",
+        "com.android.os.statsd", // statically linked by libbase
+        "test_com.android.os.statsd",
     ],
 }
 
