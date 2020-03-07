@@ -33,9 +33,8 @@ cc_library_static {
         },
     },
     apex_available: [
+        "//apex_available:anyapex",
         "//apex_available:platform",
-        "com.android.neuralnetworks",
-        "test_com.android.neuralnetworks",
     ],
 }
 
