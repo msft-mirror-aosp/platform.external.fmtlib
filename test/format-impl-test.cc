@@ -277,7 +277,7 @@ TEST(FPTest, GetRoundDirection) {
   EXPECT_EQ(fmt::internal::up, get_round_direction(100, 51, 0));
   EXPECT_EQ(fmt::internal::down, get_round_direction(100, 40, 10));
   EXPECT_EQ(fmt::internal::up, get_round_direction(100, 60, 10));
-  for (int i = 41; i < 60; ++i)
+  for (size_t i = 41; i < 60; ++i)
     EXPECT_EQ(fmt::internal::unknown, get_round_direction(100, i, 10));
   uint64_t max = max_value<uint64_t>();
   EXPECT_THROW(get_round_direction(100, 100, 0), assertion_failure);
@@ -328,14 +328,14 @@ template <typename T> struct value_extractor {
     throw std::runtime_error(fmt::format("invalid type {}", typeid(U).name()));
   }
 
-#ifdef __apple_build_version__
+#if FMT_USE_INT128
   // Apple Clang does not define typeid for __int128_t and __uint128_t.
-  FMT_NORETURN T operator()(__int128_t) {
-    throw std::runtime_error(fmt::format("invalid type {}", "__int128_t"));
+  FMT_NORETURN T operator()(fmt::internal::int128_t) {
+    throw std::runtime_error("invalid type __int128_t");
   }
 
-  FMT_NORETURN T operator()(__uint128_t) {
-    throw std::runtime_error(fmt::format("invalid type {}", "__uint128_t"));
+  FMT_NORETURN T operator()(fmt::internal::uint128_t) {
+    throw std::runtime_error("invalid type __uint128_t");
   }
 #endif
 };
