@@ -17,9 +17,7 @@ else ()
   target_compile_definitions(gmock PUBLIC GTEST_HAS_PTHREAD=0)
 endif ()
 
-if (NOT SUPPORTS_VARIADIC_TEMPLATES)
-  target_compile_definitions(gmock PUBLIC GTEST_LANG_CXX11=0)
-endif ()
+target_compile_definitions(gmock PUBLIC GTEST_LANG_CXX11=0)
 
 if (MSVC)
   # Workaround a bug in implementation of variadic templates in MSVC11.
@@ -125,7 +123,7 @@ if (NOT MSVC_BUILD_STATIC)
     target_compile_definitions(posix-mock-test PRIVATE FMT_LOCALE)
   endif ()
   add_test(NAME posix-mock-test COMMAND posix-mock-test)
-  add_fmt_test(posix-test)
+  add_fmt_test(os-test)
 endif ()
 
 add_fmt_executable(header-only-test
@@ -170,18 +168,6 @@ if (FMT_PEDANTIC)
     nolocale-test PRIVATE ${PROJECT_SOURCE_DIR}/include)
   target_compile_definitions(
     nolocale-test PRIVATE FMT_STATIC_THOUSANDS_SEPARATOR=1)
-
-  # Test that the library compiles without windows.h.
-  if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    add_library(no-windows-h-test ../src/format.cc)
-    target_include_directories(
-      no-windows-h-test PRIVATE ${PROJECT_SOURCE_DIR}/include)
-    target_compile_definitions(no-windows-h-test PRIVATE FMT_USE_WINDOWS_H=0)
-    if (FMT_PEDANTIC)
-      target_compile_options(no-windows-h-test PRIVATE ${PEDANTIC_COMPILE_FLAGS})
-    endif ()
-    target_include_directories(no-windows-h-test SYSTEM PUBLIC gtest gmock)
-  endif ()
 
   add_test(compile-error-test ${CMAKE_CTEST_COMMAND}
     --build-and-test
@@ -229,20 +215,22 @@ if (FMT_PEDANTIC AND NOT WIN32)
     "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 endif ()
 
-# Activate optional CUDA tests if CUDA is found. For version selection, see
+# Activate optional CUDA tests if CUDA is found. For version selection see
 # https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cpp14-language-features
-if (${CMAKE_VERSION} VERSION_LESS 3.15)
-  find_package(CUDA 9.0)
-else ()
-  include(CheckLanguage)
-  check_language(CUDA)
-  if (CMAKE_CUDA_COMPILER)
-    enable_language(CUDA OPTIONAL)
-    set(CUDA_FOUND TRUE)
+if (FMT_CUDA_TEST)
+  if (${CMAKE_VERSION} VERSION_LESS 3.15)
+    find_package(CUDA 9.0)
+  else ()
+    include(CheckLanguage)
+    check_language(CUDA)
+    if (CMAKE_CUDA_COMPILER)
+      enable_language(CUDA OPTIONAL)
+      set(CUDA_FOUND TRUE)
+    endif ()
   endif ()
-endif ()
 
-if (CUDA_FOUND)
-  add_subdirectory(cuda-test)
-  add_test(NAME cuda-test COMMAND fmt-in-cuda-test)
+  if (CUDA_FOUND)
+    add_subdirectory(cuda-test)
+    add_test(NAME cuda-test COMMAND fmt-in-cuda-test)
+  endif ()
 endif ()
