@@ -264,15 +264,29 @@ struct explicitly_convertible_to_string_like {
   }
 };
 
-TEST(FormatterTest, FormatExplicitlyConvertibleToStringLike) {
-  EXPECT_EQ("foo", fmt::format("{}", explicitly_convertible_to_string_like()));
-}
-
 std::ostream& operator<<(std::ostream& os,
                          explicitly_convertible_to_string_like) {
   return os << "bar";
 }
 
-TEST(FormatterTest, FormatExplicitlyConvertibleToStringLikeIgnoreInserter) {
-  EXPECT_EQ("foo", fmt::format("{}", explicitly_convertible_to_string_like()));
+TEST(FormatterTest, FormatExplicitlyConvertibleToStringLike) {
+  EXPECT_EQ("bar", fmt::format("{}", explicitly_convertible_to_string_like()));
 }
+
+#ifdef FMT_USE_STRING_VIEW
+struct explicitly_convertible_to_std_string_view {
+  explicit operator fmt::internal::std_string_view<char>() const {
+    return {"foo", 3u};
+  }
+};
+
+std::ostream& operator<<(std::ostream& os,
+                         explicitly_convertible_to_std_string_view) {
+  return os << "bar";
+}
+
+TEST(FormatterTest, FormatExplicitlyConvertibleToStdStringView) {
+  EXPECT_EQ("bar", fmt::format("{}", explicitly_convertible_to_string_like()));
+}
+
+#endif  // FMT_USE_STRING_VIEW
