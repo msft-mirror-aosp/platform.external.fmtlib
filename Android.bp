@@ -13,6 +13,7 @@ cc_defaults {
     },
     local_include_dirs: ["include"],
     export_include_dirs: ["include"],
+    min_sdk_version: "29",
 }
 
 // This is built into libbase.  If you want to use this library, link to libbase instead.
@@ -36,7 +37,6 @@ cc_library_static {
         "//apex_available:anyapex",
         "//apex_available:platform",
     ],
-    min_sdk_version: "29",
 }
 
 cc_library_static {
