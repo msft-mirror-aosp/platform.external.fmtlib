@@ -9,11 +9,11 @@ third_party {
     type: GIT
     value: "https://github.com/fmtlib/fmt.git"
   }
-  version: "7.1.0"
+  version: "7.1.1"
   license_type: NOTICE
   last_upgrade_date {
     year: 2020
-    month: 10
-    day: 28
+    month: 11
+    day: 2
   }
 }
