@@ -106,6 +106,7 @@ cc_library_static {
         "//apex_available:anyapex",
         "//apex_available:platform",
     ],
+    min_sdk_version: "29",
 }
 
 cc_library_static {
