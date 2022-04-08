@@ -1,8 +1,4 @@
-// Formatting library for C++ - FMT_ASSERT test
-//
-// It is a separate test to minimize the number of EXPECT_DEBUG_DEATH checks
-// which are slow on some platforms. In other tests FMT_ASSERT is made to throw
-// an exception which is much faster and easier to check.
+// Formatting library for C++ - assertion tests
 //
 // Copyright (c) 2012 - present, Victor Zverovich
 // All rights reserved.
@@ -12,12 +8,17 @@
 #include "fmt/core.h"
 #include "gtest.h"
 
-TEST(AssertTest, Fail) {
 #if GTEST_HAS_DEATH_TEST
-  EXPECT_DEBUG_DEATH(FMT_ASSERT(false, "don't panic!"), "don't panic!");
+#  define EXPECT_DEBUG_DEATH_IF_SUPPORTED(statement, regex) \
+    EXPECT_DEBUG_DEATH(statement, regex)
 #else
-  fmt::print("warning: death tests are not supported\n");
+#  define EXPECT_DEBUG_DEATH_IF_SUPPORTED(statement, regex) \
+    GTEST_UNSUPPORTED_DEATH_TEST_(statement, regex, )
 #endif
+
+TEST(AssertTest, Fail) {
+  EXPECT_DEBUG_DEATH_IF_SUPPORTED(FMT_ASSERT(false, "don't panic!"),
+                                  "don't panic!");
 }
 
 bool test_condition = false;

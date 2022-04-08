@@ -76,19 +76,19 @@ The general form of a *standard format specifier* is:
 
 .. productionlist:: sf
    format_spec: [[`fill`]`align`][`sign`]["#"]["0"][`width`]["." `precision`][`type`]
-   fill: <a character other than '{' or '}'>
-   align: "<" | ">" | "^"
+   fill: <a character other than '{', '}' or '\0'>
+   align: "<" | ">" | "=" | "^"
    sign: "+" | "-" | " "
-   width: `integer` | "{" [`arg_id`] "}"
-   precision: `integer` | "{" [`arg_id`] "}"
-   type: `int_type` | "a" | "A" | "c" | "e" | "E" | "f" | "F" | "g" | "G" | "L" | "p" | "s"
-   int_type: "b" | "B" | "d" | "o" | "x" | "X"
+   width: `integer` | "{" `arg_id` "}"
+   precision: `integer` | "{" `arg_id` "}"
+   type: `int_type` | "a" | "A" | "c" | "e" | "E" | "f" | "F" | "g" | "G" | "p" | "s"
+   int_type: "b" | "B" | "d" | "n" | "o" | "x" | "X"
 
-The *fill* character can be any Unicode code point other than ``'{'`` or
-``'}'``. The presence of a fill character is signaled by the character following
-it, which must be one of the alignment options. If the second character of
-*format_spec* is not a valid alignment option, then it is assumed that both the
-fill character and the alignment option are absent.
+The *fill* character can be any character other than '{', '}' or '\\0'. The
+presence of a fill character is signaled by the character following it, which
+must be one of the alignment options.  If the second character of *format_spec*
+is not a valid alignment option, then it is assumed that both the fill character
+and the alignment option are absent.
 
 The meaning of the various alignment options is as follows:
 
@@ -143,7 +143,7 @@ conversions, trailing zeros are not removed from the result.
 .. ifconfig:: False
 
    The ``','`` option signals the use of a comma for a thousands separator.
-   For a locale aware separator, use the ``'L'`` integer presentation type
+   For a locale aware separator, use the ``'n'`` integer presentation type
    instead.
 
 *width* is a decimal integer defining the minimum field width.  If not
@@ -214,9 +214,9 @@ The available integer presentation types are:
 |         | ``'#'`` option with this type adds the prefix ``"0X"``   |
 |         | to the output value.                                     |
 +---------+----------------------------------------------------------+
-| ``'L'`` | Locale-specific format. This is the same as ``'d'``,     |
-|         | except that it uses the current locale setting to insert |
-|         | the appropriate number separator characters.             |
+| ``'n'`` | Number. This is the same as ``'d'``, except that it uses |
+|         | the current locale setting to insert the appropriate     |
+|         | number separator characters.                             |
 +---------+----------------------------------------------------------+
 | none    | The same as ``'d'``.                                     |
 +---------+----------------------------------------------------------+
@@ -261,9 +261,13 @@ The available presentation types for floating-point values are:
 |         | ``'E'`` if the number gets too large. The                |
 |         | representations of infinity and NaN are uppercased, too. |
 +---------+----------------------------------------------------------+
-| ``'L'`` | Locale-specific format. This is the same as ``'g'``,     |
-|         | except that it uses the current locale setting to insert |
-|         | the appropriate number separator characters.             |
+| ``'n'`` | Number. This is the same as ``'g'``, except that it uses |
+|         | the current locale setting to insert the appropriate     |
+|         | number separator characters.                             |
++---------+----------------------------------------------------------+
+| ``'%'`` | Fixed point as a percentage. This is similar to ``'f'``, |
+|         | but the argument is multiplied by 100 and a percent sign |
+|         | ``%`` is appended.                                       |
 +---------+----------------------------------------------------------+
 | none    | Similar to ``'g'``, except that fixed-point notation,    |
 |         | when used, has at least one digit past the decimal       |
@@ -320,93 +324,78 @@ following examples.
 
 Accessing arguments by position::
 
-   fmt::format("{0}, {1}, {2}", 'a', 'b', 'c');
+   format("{0}, {1}, {2}", 'a', 'b', 'c');
    // Result: "a, b, c"
-   fmt::format("{}, {}, {}", 'a', 'b', 'c');
+   format("{}, {}, {}", 'a', 'b', 'c');
    // Result: "a, b, c"
-   fmt::format("{2}, {1}, {0}", 'a', 'b', 'c');
+   format("{2}, {1}, {0}", 'a', 'b', 'c');
    // Result: "c, b, a"
-   fmt::format("{0}{1}{0}", "abra", "cad");  // arguments' indices can be repeated
+   format("{0}{1}{0}", "abra", "cad");  // arguments' indices can be repeated
    // Result: "abracadabra"
 
 Aligning the text and specifying a width::
 
-   fmt::format("{:<30}", "left aligned");
+   format("{:<30}", "left aligned");
    // Result: "left aligned                  "
-   fmt::format("{:>30}", "right aligned");
+   format("{:>30}", "right aligned");
    // Result: "                 right aligned"
-   fmt::format("{:^30}", "centered");
+   format("{:^30}", "centered");
    // Result: "           centered           "
-   fmt::format("{:*^30}", "centered");  // use '*' as a fill char
+   format("{:*^30}", "centered");  // use '*' as a fill char
    // Result: "***********centered***********"
 
 Dynamic width::
 
-   fmt::format("{:<{}}", "left aligned", 30);
+   format("{:<{}}", "left aligned", 30);
    // Result: "left aligned                  "
 
 Dynamic precision::
 
-   fmt::format("{:.{}f}", 3.14, 1);
+   format("{:.{}f}", 3.14, 1);
    // Result: "3.1"
 
 Replacing ``%+f``, ``%-f``, and ``% f`` and specifying a sign::
 
-   fmt::format("{:+f}; {:+f}", 3.14, -3.14);  // show it always
+   format("{:+f}; {:+f}", 3.14, -3.14);  // show it always
    // Result: "+3.140000; -3.140000"
-   fmt::format("{: f}; {: f}", 3.14, -3.14);  // show a space for positive numbers
+   format("{: f}; {: f}", 3.14, -3.14);  // show a space for positive numbers
    // Result: " 3.140000; -3.140000"
-   fmt::format("{:-f}; {:-f}", 3.14, -3.14);  // show only the minus -- same as '{:f}; {:f}'
+   format("{:-f}; {:-f}", 3.14, -3.14);  // show only the minus -- same as '{:f}; {:f}'
    // Result: "3.140000; -3.140000"
+
+As a percentage::
+
+   format("{0:f} or {0:%}", .635);
+   // Result: "0.635000 or 63.500000%"
+   format("{:*^{}.{}%}", 1., 15, 2); // With fill, dynamic width and dynamic precision.
+   // Result: "****100.00%****"
 
 Replacing ``%x`` and ``%o`` and converting the value to different bases::
 
-   fmt::format("int: {0:d};  hex: {0:x};  oct: {0:o}; bin: {0:b}", 42);
+   format("int: {0:d};  hex: {0:x};  oct: {0:o}; bin: {0:b}", 42);
    // Result: "int: 42;  hex: 2a;  oct: 52; bin: 101010"
    // with 0x or 0 or 0b as prefix:
-   fmt::format("int: {0:d};  hex: {0:#x};  oct: {0:#o};  bin: {0:#b}", 42);
+   format("int: {0:d};  hex: {0:#x};  oct: {0:#o};  bin: {0:#b}", 42);
    // Result: "int: 42;  hex: 0x2a;  oct: 052;  bin: 0b101010"
 
 Padded hex byte with prefix and always prints both hex characters::
 
-   fmt::format("{:#04x}", 0);
+   format("{:#04x}", 0);
    // Result: "0x00"
 
-Box drawing using Unicode fill::
-
-   fmt::print(
-     "┌{0:─^{2}}┐\n"
-     "│{1: ^{2}}│\n"
-     "└{0:─^{2}}┘\n", "", "Hello, world!", 20);
-
-prints::
-
-   ┌────────────────────┐
-   │   Hello, world!    │
-   └────────────────────┘
-
-Using type-specific formatting::
-
-   #include <fmt/chrono.h>
-
-   auto t = tm();
-   t.tm_year = 2010 - 1900;
-   t.tm_mon = 6;
-   t.tm_mday = 4;
-   t.tm_hour = 12;
-   t.tm_min = 15;
-   t.tm_sec = 58;
-   fmt::print("{:%Y-%m-%d %H:%M:%S}", t);
-   // Prints: 2010-08-04 12:15:58
-
-Using the comma as a thousands separator::
-
-   #include <fmt/locale.h>
-
-   auto s = fmt::format(std::locale("en_US.UTF-8"), "{:L}", 1234567890);
-   // s == "1,234,567,890"
-
 .. ifconfig:: False
+
+   Using the comma as a thousands separator::
+
+      format("{:,}", 1234567890);
+      '1,234,567,890'
+
+   Using type-specific formatting::
+
+      >>> import datetime
+      >>> d = datetime.datetime(2010, 7, 4, 12, 15, 58)
+      Format("{:%Y-%m-%d %H:%M:%S}") << d)
+      '2010-07-04 12:15:58'
 
    Nesting arguments and more complex examples::
 
