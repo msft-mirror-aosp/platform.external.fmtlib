@@ -115,6 +115,10 @@ cc_library_static {
     defaults: ["fmtlib-non-test-defaults"],
     sdk_version: "current",
     stl: "c++_static",
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.mediaprovider",
+    ],
 }
 
 cc_defaults {
