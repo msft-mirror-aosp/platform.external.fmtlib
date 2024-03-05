@@ -21,8 +21,38 @@
 #include "format.h"
 
 FMT_BEGIN_NAMESPACE
-
 namespace detail {
+
+template <typename Streambuf> class formatbuf : public Streambuf {
+ private:
+  using char_type = typename Streambuf::char_type;
+  using streamsize = decltype(std::declval<Streambuf>().sputn(nullptr, 0));
+  using int_type = typename Streambuf::int_type;
+  using traits_type = typename Streambuf::traits_type;
+
+  buffer<char_type>& buffer_;
+
+ public:
+  explicit formatbuf(buffer<char_type>& buf) : buffer_(buf) {}
+
+ protected:
+  // The put area is always empty. This makes the implementation simpler and has
+  // the advantage that the streambuf and the buffer are always in sync and
+  // sputc never writes into uninitialized memory. A disadvantage is that each
+  // call to sputc always results in a (virtual) call to overflow. There is no
+  // disadvantage here for sputn since this always results in a call to xsputn.
+
+  auto overflow(int_type ch) -> int_type override {
+    if (!traits_type::eq_int_type(ch, traits_type::eof()))
+      buffer_.push_back(static_cast<char_type>(ch));
+    return ch;
+  }
+
+  auto xsputn(const char_type* s, streamsize count) -> streamsize override {
+    buffer_.append(s, s + count);
+    return count;
+  }
+};
 
 // Generate a unique explicit instantion in every translation unit using a tag
 // type in an anonymous namespace.
@@ -40,7 +70,8 @@ template class file_access<file_access_tag, std::filebuf,
 auto get_file(std::filebuf&) -> FILE*;
 #endif
 
-inline bool write_ostream_unicode(std::ostream& os, fmt::string_view data) {
+inline auto write_ostream_unicode(std::ostream& os, fmt::string_view data)
+    -> bool {
   FILE* f = nullptr;
 #if FMT_MSC_VERSION
   if (auto* buf = dynamic_cast<std::filebuf*>(os.rdbuf()))
@@ -69,8 +100,8 @@ inline bool write_ostream_unicode(std::ostream& os, fmt::string_view data) {
 #endif
   return false;
 }
-inline bool write_ostream_unicode(std::wostream&,
-                                  fmt::basic_string_view<wchar_t>) {
+inline auto write_ostream_unicode(std::wostream&,
+                                  fmt::basic_string_view<wchar_t>) -> bool {
   return false;
 }
 
@@ -91,12 +122,11 @@ void write_buffer(std::basic_ostream<Char>& os, buffer<Char>& buf) {
 }
 
 template <typename Char, typename T>
-void format_value(buffer<Char>& buf, const T& value,
-                  locale_ref loc = locale_ref()) {
+void format_value(buffer<Char>& buf, const T& value) {
   auto&& format_buf = formatbuf<std::basic_streambuf<Char>>(buf);
   auto&& output = std::basic_ostream<Char>(&format_buf);
 #if !defined(FMT_STATIC_THOUSANDS_SEPARATOR)
-  if (loc) output.imbue(loc.get<std::locale>());
+  output.imbue(std::locale::classic());  // The default is always unlocalized.
 #endif
   output << value;
   output.exceptions(std::ios_base::failbit | std::ios_base::badbit);
@@ -117,7 +147,7 @@ struct basic_ostream_formatter : formatter<basic_string_view<Char>, Char> {
   auto format(const T& value, basic_format_context<OutputIt, Char>& ctx) const
       -> OutputIt {
     auto buffer = basic_memory_buffer<Char>();
-    detail::format_value(buffer, value, ctx.locale());
+    detail::format_value(buffer, value);
     return formatter<basic_string_view<Char>, Char>::format(
         {buffer.data(), buffer.size()}, ctx);
   }
