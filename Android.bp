@@ -133,7 +133,11 @@ cc_defaults {
     host_supported: true,
     test_suites: ["general-tests"],
     // The tests require exceptions and RTTI.
-    cflags: ["-fexceptions"],
+    cflags: [
+        "-fexceptions",
+        // https://github.com/fmtlib/fmt/issues/3884
+        "-Wno-non-virtual-dtor",
+    ],
     rtti: true,
     // The usual "gtest *and* gmock, please" dance...
     gtest: false,
