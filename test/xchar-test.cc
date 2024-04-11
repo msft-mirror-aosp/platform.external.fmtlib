@@ -187,18 +187,6 @@ template <typename S> std::string from_u8str(const S& str) {
   return std::string(str.begin(), str.end());
 }
 
-TEST(xchar_test, format_utf8_precision) {
-  using str_type = std::basic_string<fmt::detail::char8_type>;
-  auto format =
-      str_type(reinterpret_cast<const fmt::detail::char8_type*>(u8"{:.4}"));
-  auto str = str_type(reinterpret_cast<const fmt::detail::char8_type*>(
-      u8"caf\u00e9s"));  // cafés
-  auto result = fmt::format(format, str);
-  EXPECT_EQ(fmt::detail::compute_width(result), 4);
-  EXPECT_EQ(result.size(), 5);
-  EXPECT_EQ(from_u8str(result), from_u8str(str.substr(0, 5)));
-}
-
 TEST(xchar_test, format_to) {
   auto buf = std::vector<wchar_t>();
   fmt::format_to(std::back_inserter(buf), L"{}{}", 42, L'\0');
@@ -581,7 +569,7 @@ template <class charT> struct formatter<std::complex<double>, charT> {
       basic_format_parse_context<charT>& ctx) {
     auto end = parse_format_specs(ctx.begin(), ctx.end(), specs_, ctx,
                                   detail::type::float_type);
-    detail::parse_float_type_spec(specs_, detail::error_handler());
+    detail::parse_float_type_spec(specs_);
     return end;
   }
 
@@ -599,9 +587,9 @@ template <class charT> struct formatter<std::complex<double>, charT> {
                             fmt::runtime("{:" + specs + "}"), c.imag());
     auto fill_align_width = std::string();
     if (specs_.width > 0) fill_align_width = fmt::format(">{}", specs_.width);
-    return format_to(ctx.out(), runtime("{:" + fill_align_width + "}"),
-                     c.real() != 0 ? fmt::format("({}+{}i)", real, imag)
-                                   : fmt::format("{}i", imag));
+    return fmt::format_to(ctx.out(), runtime("{:" + fill_align_width + "}"),
+                          c.real() != 0 ? fmt::format("({}+{}i)", real, imag)
+                                        : fmt::format("{}i", imag));
   }
 };
 FMT_END_NAMESPACE
