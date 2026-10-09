@@ -7,21 +7,21 @@ description: "{fmt} is an open-source formatting library providing a fast and sa
 third_party {
   license_type: NOTICE
   security {
-    tag: "NVD-CPE2.3:cpe:/a:fmt:fmt:12.0.0"
+    tag: "NVD-CPE2.3:cpe:/a:fmt:fmt:12.2.0"
     tag: "android:on_device_usage"
     tag: "android:privilege_level:privileged"
     tag: "android:untrusted_input"
   }
   last_upgrade_date {
-    year: 2025
+    year: 2026
     month: 10
-    day: 1
+    day: 9
   }
   homepage: "https://github.com/fmtlib/fmt"
   identifier {
     type: "Git"
     value: "https://github.com/fmtlib/fmt.git"
-    version: "e424e3f2e607da02742f73db84873b8084fc714c"
-    closest_version: "12.0.0"
+    version: "588b3a0f8f6a8bcf2a959cae882d5b2703e86737"
+    closest_version: "12.2.0"
   }
 }

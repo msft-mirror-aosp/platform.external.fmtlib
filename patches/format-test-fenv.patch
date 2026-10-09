@@ -1,0 +1,14 @@
+diff --git a/test/format-test.cc b/test/format-test.cc
+index 8c2670a1..28e0a598 100644
+--- a/test/format-test.cc
++++ b/test/format-test.cc
+@@ -134,6 +134,9 @@ void check_no_fp_exception() {
+ }
+ 
+ template <typename Float> void check_isnan() {
++  // GoogleTest sets FE_INEXACT during setup; clear it for the test to proceed as expected.
++  feclearexcept(FE_INEXACT);
++
+   using fmt::detail::isnan;
+   EXPECT_FALSE(isnan(Float(0.0)));
+   EXPECT_FALSE(isnan(Float(42.0)));
