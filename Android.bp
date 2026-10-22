@@ -34,6 +34,7 @@ license {
     license_text: [
         "LICENSE",
         "NOTICE",
+        "doc/LICENSE-exception",
     ],
 }
 
@@ -152,56 +153,96 @@ cc_defaults {
     ],
 }
 
-// Most of the fmtlib tests.
+// Each test split out into its own target. The upstream assumes
+// they run independently, running them together causes interaction
+// issues for several tests.
 cc_test {
-    name: "fmtlib_test_1",
+    name: "fmtlib_args_test",
     defaults: ["fmtlib-test-defaults"],
-    srcs: [
-        "test/args-test.cc",
-        "test/base-test.cc",
-        "test/chrono-test.cc",
-        "test/color-test.cc",
-        "test/format-test.cc",
-        "test/noexception-test.cc",
-        // Some of the os-test tests deliberately try to do bad things with
-        // file descriptors, but Android's fdsan won't let them.
-        // "test/os-test.cc",
-        "test/ranges-odr-test.cc",
-        // Includes fmt/format-inl.h twice, causing duplicated symbols.
-        // "test/scan-test.cc",
-        // Depends on filesystem_error declarations which are not linked.
-        // "test/std-test.cc",
-        "test/unicode-test.cc",
-        "test/xchar-test.cc",
-    ],
+    srcs: ["test/args-test.cc"],
 }
+
+cc_test {
+    name: "fmtlib_base_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/base-test.cc"],
+}
+
+cc_test {
+    name: "fmtlib_chrono_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/chrono-test.cc"],
+}
+
+cc_test {
+    name: "fmtlib_color_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/color-test.cc"],
+}
+
+// enforce-checks-test.cc is a test with a main() function
+cc_test {
+    name: "fmtlib_enforce_checks_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/enforce-checks-test.cc"],
+}
+
+cc_test {
+    name: "fmtlib_format_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/format-test.cc"],
+}
+
+// noexception-test.cc is a compile-time check with no GTest TEST() cases.
+cc_test {
+    name: "fmtlib_noexception_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/noexception-test.cc"],
+}
+
+// Some of the os-test tests deliberately try to do bad things with
+// file descriptors, but Android's fdsan won't let them.
+// "test/os-test.cc",
 
 // This one needs to be separate because some of the test names overlap with
 // other tests.
 cc_test {
-    name: "fmtlib_test_2",
+    name: "fmtlib_ostream_test",
     defaults: ["fmtlib-test-defaults"],
-    srcs: [
-        "test/ostream-test.cc",
-        "test/printf-test.cc",
-    ],
+    srcs: ["test/ostream-test.cc"],
+}
+
+cc_test {
+    name: "fmtlib_printf_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/printf-test.cc"],
 }
 
 // This one needs to be seprate because multiple definition of
 // function format_as(test_enum) with printf-test.cc
 cc_test {
-    name: "fmtlib_test_3",
+    name: "fmtlib_ranges_test",
     defaults: ["fmtlib-test-defaults"],
     srcs: [
         "test/ranges-test.cc",
+        "test/ranges-odr-test.cc",
     ],
 }
 
-// enforce-checks-test.cc is a test with a main() function
+// Includes fmt/format-inl.h twice, causing duplicated symbols.
+// "test/scan-test.cc",
+
+// Depends on filesystem_error declarations which are not linked.
+// "test/std-test.cc",
+
 cc_test {
-    name: "fmtlib_test_4",
+    name: "fmtlib_unicode_test",
     defaults: ["fmtlib-test-defaults"],
-    srcs: [
-        "test/enforce-checks-test.cc",
-    ],
+    srcs: ["test/unicode-test.cc"],
+}
+
+cc_test {
+    name: "fmtlib_xchar_test",
+    defaults: ["fmtlib-test-defaults"],
+    srcs: ["test/xchar-test.cc"],
 }

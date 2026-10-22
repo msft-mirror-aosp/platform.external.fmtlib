@@ -1,6 +1,6 @@
 // Formatting library for C++
 //
-// Copyright (c) 2012 - 2016, Victor Zverovich
+// Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors
 // All rights reserved.
 //
 // For the license information refer to format.h.
@@ -10,7 +10,7 @@
 FMT_BEGIN_NAMESPACE
 
 #if FMT_USE_LOCALE
-template FMT_API locale_ref::locale_ref(const std::locale& loc);
+template FMT_API locale_ref::locale_ref(const std::locale& loc);  // DEPRECATED!
 template FMT_API auto locale_ref::get<std::locale>() const -> std::locale;
 #endif
 
