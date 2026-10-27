@@ -1,0 +1,12 @@
+diff --git a/include/fmt/core.h b/include/fmt/core.h
+index eff2ae89..ab172c6e 100644
+--- a/include/fmt/core.h
++++ b/include/fmt/core.h
+@@ -9,6 +9,4 @@
+ 
+ // Using fmt::format via fmt/core.h has been deprecated since version 11
+ // and now requires an explicit opt in.
+-#ifdef FMT_DEPRECATED_HEAVY_CORE
+-#  include "format.h"
+-#endif
++#include "format.h"

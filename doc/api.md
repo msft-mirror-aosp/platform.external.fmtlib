@@ -20,6 +20,12 @@ The {fmt} library API consists of the following components:
 All functions and types provided by the library reside in namespace `fmt`
 and macros have prefix `FMT_`.
 
+## C++ Module API
+
+With the C++ module API, the headers listed above don't need to be included.
+You can use the `import fmt;` statement instead. All other functionality,
+listed below, remains the same.
+
 ## Base API
 
 `fmt/base.h` defines the base API which provides main formatting functions
@@ -28,7 +34,7 @@ dependencies for better compile times. This header is only beneficial when
 using {fmt} as a library (the default) and not in the header-only mode.
 It also provides `formatter` specializations for the following types:
 
-- `int`, `long long`,
+- `int`, `long long`
 - `unsigned`, `unsigned long long`
 - `float`, `double`, `long double`
 - `bool`
@@ -105,8 +111,8 @@ Example ([run](https://godbolt.org/z/nvME4arz8)):
       fmt::print("{}\n", kevin_namespacy::film::se7en); // Output: 7
     }
 
-Using specialization is more complex but gives you full control over
-parsing and formatting. To use this method specialize the `formatter`
+Using a specialization is more complex, but gives you full control over
+parsing and formatting. To use this method, specialize the `formatter`
 struct template for your type and implement `parse` and `format`
 methods.
 
@@ -319,9 +325,7 @@ parameterized version.
 
 ### Named Arguments
 
-::: arg(const Char*, const T&)
-
-Named arguments are not supported in compile-time checks at the moment.
+::: arg(const char*, const T&)
 
 ### Compatibility
 
@@ -517,7 +521,7 @@ chrono-format-specifications).
 
 ### Variants
 
-A `std::variant` is only formattable if every variant alternative is
+A `std::variant` can be formatted only if every alternative is
 formattable, and requires the `__cpp_lib_variant` [library
 feature](https://en.cppreference.com/w/cpp/feature_test).
 
@@ -624,6 +628,8 @@ Example:
 
 ::: ostream
 
+::: output_file(cstring_view, T...)
+
 ::: windows_error
 
 <a id="ostream-api"></a>
@@ -706,5 +712,55 @@ following differences:
   precision that provides round-trip guarantees similarly to other languages
   like Java and Python. `std::format` is currently specified in terms of
   `std::to_chars` which tries to generate the smallest number of characters
-  (ignoring redundant digits and sign in exponent) and may procude more
+  (ignoring redundant digits and sign in exponent) and may produce more
   decimal digits than necessary.
+
+## Configuration Options
+
+{fmt} provides configuration via CMake options and preprocessor macros to
+enable or disable features and to optimize for binary size. For example, you
+can disable OS-specific APIs defined in `fmt/os.h` with `-DFMT_OS=OFF` when
+configuring CMake.
+
+### CMake Options
+
+- **`FMT_OS`**: When set to `OFF`, disables OS-specific APIs (`fmt/os.h`).
+- **`FMT_UNICODE`**: When set to `OFF`, disables Unicode support on
+  Windows/MSVC. Unicode support is always enabled on other platforms.
+
+### Macros
+
+- **`FMT_HEADER_ONLY`**: Enables the header-only mode when defined. It is an
+  alternative to using the `fmt::fmt-header-only` CMake target.
+  Default: not defined.
+
+- **`FMT_USE_EXCEPTIONS`**: Disables the use of exceptions when set to `0`.
+  Default: `1` (`0` if compiled with `-fno-exceptions`).
+
+- **`FMT_USE_LOCALE`**: When set to `0`, disables locale support.
+  Default: `1` (`0` when `FMT_OPTIMIZE_SIZE > 1`).
+
+- **`FMT_CUSTOM_ASSERT_FAIL`**: When set to `1`, allows users to provide a
+  custom `fmt::assert_fail` function which is called on assertion failures and,
+  if exceptions are disabled, on runtime errors. Default: `0`.
+
+- **`FMT_BUILTIN_TYPES`**: When set to `0`, disables built-in handling of
+  arithmetic and string types other than `int`. This reduces library size at
+  the cost of per-call overhead. Default: `1`.
+
+- **`FMT_OPTIMIZE_SIZE`**: Controls binary size optimizations:
+    - `0` - off (default)
+    - `1` - disables locale support and applies some optimizations
+    - `2` - disables some Unicode features, named arguments and applies more
+      aggressive optimizations
+
+### Binary Size Optimization
+
+To minimize the binary footprint of {fmt} as much as possible at the cost of
+some features, you can use the following configuration:
+
+- CMake options:
+    - `FMT_OS=OFF`
+- Macros:
+    - `FMT_BUILTIN_TYPES=0`
+    - `FMT_OPTIMIZE_SIZE=2`

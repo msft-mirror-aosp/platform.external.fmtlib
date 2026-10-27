@@ -1,24 +1,66 @@
 {
   "postsubmit": [
     {
-      "name": "fmtlib_test_1"
+      "name": "fmtlib_args_test"
     },
     {
-      "name": "fmtlib_test_2"
+      "name": "fmtlib_base_test"
     },
     {
-      "name": "fmtlib_test_3"
+      "name": "fmtlib_chrono_test"
+    },
+    {
+      "name": "fmtlib_color_test"
+    },
+    {
+      "name": "fmtlib_format_test"
+    },
+    {
+      "name": "fmtlib_ostream_test"
+    },
+    {
+      "name": "fmtlib_printf_test"
+    },
+    {
+      "name": "fmtlib_ranges_test"
+    },
+    {
+      "name": "fmtlib_unicode_test"
+    },
+    {
+      "name": "fmtlib_xchar_test"
     }
   ],
   "hwasan-postsubmit": [
     {
-      "name": "fmtlib_test_1"
+      "name": "fmtlib_args_test"
     },
     {
-      "name": "fmtlib_test_2"
+      "name": "fmtlib_base_test"
     },
     {
-      "name": "fmtlib_test_3"
+      "name": "fmtlib_chrono_test"
+    },
+    {
+      "name": "fmtlib_color_test"
+    },
+    {
+      "name": "fmtlib_format_test"
+    },
+    {
+      "name": "fmtlib_ostream_test"
+    },
+    {
+      "name": "fmtlib_printf_test"
+    },
+    {
+      "name": "fmtlib_ranges_test"
+    },
+    {
+      "name": "fmtlib_unicode_test"
+    },
+    {
+      "name": "fmtlib_xchar_test"
     }
   ]
 }
